@@ -13,15 +13,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install ncurses5 deb from Debian (includes libtinfo5)
-        run: |
-          sudo apt update || true
-          wget http://deb.debian.org/debian/pool/main/n/ncurses/libncurses5_6.3-2_amd64.deb -O libncurses5.deb
-          sudo dpkg -i libncurses5.deb || sudo apt install -f -y
-          wget http://deb.debian.org/debian/pool/main/n/ncurses/libtinfo5_6.3-2_amd64.deb -O libtinfo5.deb
-          sudo dpkg -i libtinfo5.deb || sudo apt install -f -y
-          rm *.deb
-
       - name: Setup Theos
         uses: Randomblock1/theos-action@v1
         with:
@@ -35,6 +26,10 @@ jobs:
         run: |
           make clean || true
           make package FINALPACKAGE=1 || true
+          # 强制打印输出目录，方便 debug
+          ls -la packages/ || true
+          ls -la .theos/obj/ || true
+          find . -name "*.dylib" || true
         env:
           THEOS_PACKAGE_SCHEME: rootless
           THEOS: ${{ github.workspace }}/theos
