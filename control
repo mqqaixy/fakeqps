@@ -1,0 +1,9 @@
+Package: com.mqqaxy.fakelocationpro
+Name: FakeLocationPro
+Version: 1.0
+Depends: firmware (>= 15.0)
+Architecture: iphoneos-arm64
+Description: 虚拟定位插件，支持两指长按修改位置
+Maintainer: mqqaxy
+Author: mqqaxy
+Section: Tweaks
