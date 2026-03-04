@@ -41,10 +41,12 @@ static BOOL isSpoofing = NO;
             rootVC = rootVC.presentedViewController;
         }
 
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"虚拟定位" message:@"输入纬度,经度 (如 39.9042,116.4074)" preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"虚拟定位"
+                                                                       message:@"输入纬度,经度 (如 39.9042,116.4074)"
+                                                                preferredStyle:UIAlertControllerStyleAlert];
 
         [alert addTextFieldWithConfigurationHandler:^(UITextField *textField) {
-            textField.placeholder = @"纬度,经度";
+            textField.placeholder = @"纬度, 经度";
         }];
 
         UIAlertAction *ok = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
