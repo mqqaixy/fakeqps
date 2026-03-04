@@ -13,25 +13,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies (force continue even if errors)
+      - name: Manual install all dependencies (no action deps)
         run: |
           sudo apt update || true
           sudo apt install -y fakeroot git perl build-essential unzip curl wget rsync libxml2-utils libncurses6 || true
 
-          # 强制下载 libtinfo5 deb (清华镜像 + 官方 fallback)
+          # 手动下载 libtinfo5 deb (清华镜像 6.3-2 版)
           wget https://mirrors.tuna.tsinghua.edu.cn/ubuntu/pool/main/n/ncurses/libtinfo5_6.3-2_amd64.deb -O libtinfo5.deb || true
           sudo dpkg -i libtinfo5.deb || sudo apt install -f -y || true
 
           rm *.deb || true
 
-      - name: Setup Theos
-        uses: Randomblock1/theos-action@v1
-        with:
-          theos-dir: theos
-          theos-src: https://github.com/theos/theos
-          theos-sdks: https://github.com/xybp888/iOS-SDKs
-          theos-sdks-branch: master
-          orion: false
+      - name: Setup Theos (manual clone to avoid apt in action)
+        run: |
+          git clone --recursive https://github.com/theos/theos.git theos
+          cd theos
+          git checkout master || true
+          cd ..
+          mkdir -p theos/sdks
+          git clone https://github.com/xybp888/iOS-SDKs.git temp-sdks
+          mv temp-sdks/*.sdk theos/sdks/ || true
+          rm -rf temp-sdks
 
       - name: Cache Theos & SDKs
         uses: actions/cache@v4
@@ -43,14 +45,15 @@ jobs:
 
       - name: Build & Package
         run: |
+          export THEOS=${{ github.workspace }}/theos
+          export THEOS_PACKAGE_SCHEME=rootless
+          export ARCHS="arm64 arm64e"
           make clean || true
           make package FINALPACKAGE=1 || true
         env:
-          THEOS_PACKAGE_SCHEME: rootless
           THEOS: ${{ github.workspace }}/theos
-          ARCHS: arm64 arm64e
 
-      - name: Upload artifacts (always upload if any files exist)
+      - name: Upload artifacts (always)
         uses: actions/upload-artifact@v4
         if: always()
         with:
