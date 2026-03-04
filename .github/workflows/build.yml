@@ -13,24 +13,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies (manual deb for libtinfo5 etc)
+      - name: Install dependencies (manual deb from security.ubuntu.com)
         run: |
           sudo apt update
           sudo apt install -y fakeroot git perl build-essential unzip curl wget rsync libxml2-utils libncurses6
 
-          # 用 mirrors.ustc.edu.cn 镜像下载 libtinfo5 (当前有效)
-          wget https://mirrors.ustc.edu.cn/ubuntu/pool/main/n/ncurses/libtinfo5_6.3-2_amd64.deb -O libtinfo5.deb || { echo "wget failed, try another mirror"; exit 1; }
+          # 主链接：Ubuntu security 仓库 (当前有效，2026 年可用)
+          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb -O libtinfo5.deb || {
+            echo "Main link failed, trying fallback mirror";
+            wget https://mirrors.aliyun.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb -O libtinfo5.deb;
+          }
           sudo dpkg -i libtinfo5.deb || sudo apt install -f -y
 
           # libncurses5
-          wget https://mirrors.ustc.edu.cn/ubuntu/pool/main/n/ncurses/libncurses5_6.3-2_amd64.deb -O libncurses5.deb || exit 1
+          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libncurses5_6.3-2ubuntu0.1_amd64.deb -O libncurses5.deb || {
+            wget https://mirrors.aliyun.com/ubuntu/pool/universe/n/ncurses/libncurses5_6.3-2ubuntu0.1_amd64.deb -O libncurses5.deb;
+          }
           sudo dpkg -i libncurses5.deb || sudo apt install -f -y
 
           # libncurses5-dev
-          wget https://mirrors.ustc.edu.cn/ubuntu/pool/main/n/ncurses/libncurses5-dev_6.3-2_amd64.deb -O libncurses5-dev.deb || exit 1
+          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libncurses5-dev_6.3-2ubuntu0.1_amd64.deb -O libncurses5-dev.deb || {
+            wget https://mirrors.aliyun.com/ubuntu/pool/universe/n/ncurses/libncurses5-dev_6.3-2ubuntu0.1_amd64.deb -O libncurses5-dev.deb;
+          }
           sudo dpkg -i libncurses5-dev.deb || sudo apt install -f -y
 
-          # 清理 deb 文件
+          # 清理
           rm *.deb
 
       - name: Setup Theos
