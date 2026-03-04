@@ -13,10 +13,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install libtinfo5 deb (pre-fix apt)
+      - name: Install libtinfo5 deb from old-releases (stable archive)
         run: |
           sudo apt update
-          wget http://archive.ubuntu.com/ubuntu/pool/main/n/ncurses/libtinfo5_6.2-0ubuntu2_amd64.deb -O libtinfo5.deb
+          wget http://old-releases.ubuntu.com/ubuntu/pool/main/n/ncurses/libtinfo5_6.2-0ubuntu2_amd64.deb -O libtinfo5.deb
           sudo dpkg -i libtinfo5.deb || sudo apt install -f -y
           rm libtinfo5.deb
 
