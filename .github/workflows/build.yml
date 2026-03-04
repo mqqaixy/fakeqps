@@ -13,13 +13,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies (libtinfo5 from focal archive)
+      - name: Install dependencies (libtinfo5 from kernel.org mirror)
         run: |
           sudo apt update
           sudo apt install -y fakeroot git perl build-essential unzip curl wget rsync libxml2-utils libncurses6
 
-          # 下载 libtinfo5 6.2-0ubuntu2 (focal 经典版，当前有效)
-          wget http://archive.ubuntu.com/ubuntu/pool/main/n/ncurses/libtinfo5_6.2-0ubuntu2_amd64.deb -O libtinfo5.deb
+          # 下载 libtinfo5 6.2-0ubuntu2 from kernel.org mirror (2026年3月有效)
+          wget https://mirrors.edge.kernel.org/ubuntu/pool/main/n/ncurses/libtinfo5_6.2-0ubuntu2_amd64.deb -O libtinfo5.deb || {
+            echo "kernel mirror failed, trying debian-archive";
+            wget http://archive.debian.org/debian/pool/main/n/ncurses/libtinfo5_6.2-0ubuntu2_amd64.deb -O libtinfo5.deb;
+          }
           sudo dpkg -i libtinfo5.deb || sudo apt install -f -y
 
           # 清理
