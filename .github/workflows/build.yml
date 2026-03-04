@@ -36,8 +36,16 @@ jobs:
           cd toolchain
           git checkout master || true
           cd ..
-          ln -s toolchain/linux/iphone toolchain/iphone || true
-          ls -la toolchain/linux/iphone/bin/ || true  # 打印 clang 是否下载成功
+          # 强制修复 clang 路径
+          mkdir -p toolchain/linux/iphone/bin
+          # 如果 git clone 成功，链接 clang
+          if [ -f toolchain/linux/iphone/bin/clang ]; then
+            echo "clang found!"
+          else
+            echo "clang not found, trying to fix path"
+          fi
+          ln -sf toolchain/linux/iphone/bin/clang toolchain/iphone/bin/clang || true
+          ls -la toolchain/linux/iphone/bin/ || true  # 打印 clang 是否存在
 
       - name: Cache Theos & SDKs
         uses: actions/cache@v4
@@ -54,9 +62,11 @@ jobs:
           export ARCHS="arm64 arm64e"
           make clean || true
           make package FINALPACKAGE=1 || true
-          ls -la packages/ || true
+          # 打印所有生成的文件
+          echo "Listing all files after build:"
+          find . -type f | grep -E "\.dylib|\.deb" || true
           ls -la .theos/obj/ || true
-          find . -name "*.dylib" || true
+          ls -la packages/ || true
         env:
           THEOS: ${{ github.workspace }}/theos
 
