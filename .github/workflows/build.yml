@@ -18,17 +18,20 @@ jobs:
           sudo apt update
           sudo apt install -y fakeroot git perl build-essential unzip curl wget rsync libxml2-utils libncurses6
 
-          # 手动下载并安装 libtinfo5 (从 Ubuntu 20.04 仓库)
-          wget http://archive.ubuntu.com/ubuntu/pool/main/n/ncurses/libtinfo5_6.2-0ubuntu2_amd64.deb
-          sudo dpkg -i libtinfo5_6.2-0ubuntu2_amd64.deb || sudo apt install -f -y  # 自动修复依赖
+          # 用 mirrors.ustc.edu.cn 镜像下载 libtinfo5 (当前有效)
+          wget https://mirrors.ustc.edu.cn/ubuntu/pool/main/n/ncurses/libtinfo5_6.3-2_amd64.deb -O libtinfo5.deb || { echo "wget failed, try another mirror"; exit 1; }
+          sudo dpkg -i libtinfo5.deb || sudo apt install -f -y
 
-          # 下载 libncurses5 (兼容)
-          wget http://archive.ubuntu.com/ubuntu/pool/main/n/ncurses/libncurses5_6.2-0ubuntu2_amd64.deb
-          sudo dpkg -i libncurses5_6.2-0ubuntu2_amd64.deb || sudo apt install -f -y
+          # libncurses5
+          wget https://mirrors.ustc.edu.cn/ubuntu/pool/main/n/ncurses/libncurses5_6.3-2_amd64.deb -O libncurses5.deb || exit 1
+          sudo dpkg -i libncurses5.deb || sudo apt install -f -y
 
-          # libncurses-dev 类似
-          wget http://archive.ubuntu.com/ubuntu/pool/main/n/ncurses/libncurses5-dev_6.2-0ubuntu2_amd64.deb
-          sudo dpkg -i libncurses5-dev_6.2-0ubuntu2_amd64.deb || sudo apt install -f -y
+          # libncurses5-dev
+          wget https://mirrors.ustc.edu.cn/ubuntu/pool/main/n/ncurses/libncurses5-dev_6.3-2_amd64.deb -O libncurses5-dev.deb || exit 1
+          sudo dpkg -i libncurses5-dev.deb || sudo apt install -f -y
+
+          # 清理 deb 文件
+          rm *.deb
 
       - name: Setup Theos
         uses: Randomblock1/theos-action@v1
