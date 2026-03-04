@@ -13,16 +13,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies (libtinfo5 from Tsinghua mirror)
+      - name: Install dependencies (libtinfo5 from focal archive)
         run: |
           sudo apt update
           sudo apt install -y fakeroot git perl build-essential unzip curl wget rsync libxml2-utils libncurses6
 
-          # 用清华镜像下载 libtinfo5 6.3-2 (当前有效)
-          wget https://mirrors.tuna.tsinghua.edu.cn/ubuntu/pool/main/n/ncurses/libtinfo5_6.3-2_amd64.deb -O libtinfo5.deb || {
-            echo "Tsinghua failed, trying official archive";
-            wget http://archive.ubuntu.com/ubuntu/pool/main/n/ncurses/libtinfo5_6.3-2_amd64.deb -O libtinfo5.deb;
-          }
+          # 下载 libtinfo5 6.2-0ubuntu2 (focal 经典版，当前有效)
+          wget http://archive.ubuntu.com/ubuntu/pool/main/n/ncurses/libtinfo5_6.2-0ubuntu2_amd64.deb -O libtinfo5.deb
           sudo dpkg -i libtinfo5.deb || sudo apt install -f -y
 
           # 清理
