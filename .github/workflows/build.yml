@@ -13,27 +13,50 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Theos
-        uses: Randomblock1/theos-action@v1
-        with:
-          theos-dir: theos
-          theos-src: https://github.com/theos/theos
-          theos-sdks: https://github.com/xybp888/iOS-SDKs
-          theos-sdks-branch: master
-          orion: false
+      - name: Manual install dependencies (no libtinfo5)
+        run: |
+          sudo apt update || true
+          sudo apt install -y fakeroot git perl build-essential unzip curl wget rsync libxml2-utils libncurses6 || true
+
+      - name: Manual Setup Theos + Toolchain (no action apt)
+        run: |
+          git clone --recursive https://github.com/theos/theos.git theos || true
+          cd theos
+          git checkout master || true
+          cd ..
+          # 下载 toolchain (包含 clang/ld64)
+          cd theos
+          git clone https://github.com/theos/toolchain.git toolchain || true
+          cd toolchain
+          git checkout master || true
+          cd ..
+          # 链接 toolchain
+          ln -sf toolchain/linux/iphone toolchain/iphone || true
+          # 打印 toolchain 是否成功
+          ls -la toolchain/linux/iphone/bin/ || true
+
+          # 下载 SDKs
+          mkdir -p theos/sdks
+          git clone https://github.com/xybp888/iOS-SDKs.git temp-sdks || true
+          mv temp-sdks/*.sdk theos/sdks/ || true
+          rm -rf temp-sdks
 
       - name: Build & Package
         run: |
+          export THEOS=${{ github.workspace }}/theos
+          export THEOS_PACKAGE_SCHEME=rootless
+          export ARCHS="arm64 arm64e"
           make clean || true
           make package FINALPACKAGE=1 || true
-          # 强制打印输出目录，方便 debug
-          ls -la packages/ || true
+          # 打印所有输出文件
+          echo "Listing obj directory:"
           ls -la .theos/obj/ || true
+          echo "Listing packages directory:"
+          ls -la packages/ || true
+          echo "Finding all .dylib:"
           find . -name "*.dylib" || true
         env:
-          THEOS_PACKAGE_SCHEME: rootless
           THEOS: ${{ github.workspace }}/theos
-          ARCHS: arm64 arm64e
 
       - name: Upload artifacts (wide search)
         uses: actions/upload-artifact@v4
