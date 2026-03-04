@@ -13,71 +13,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Manual install dependencies
+      - name: Install libtinfo5 deb (pre-fix apt)
         run: |
-          sudo apt update || true
-          sudo apt install -y fakeroot git perl build-essential unzip curl wget rsync libxml2-utils libncurses6 || true
+          sudo apt update
+          wget http://archive.ubuntu.com/ubuntu/pool/main/n/ncurses/libtinfo5_6.2-0ubuntu2_amd64.deb -O libtinfo5.deb
+          sudo dpkg -i libtinfo5.deb || sudo apt install -f -y
+          rm libtinfo5.deb
 
-      - name: Setup Theos (manual clone)
-        run: |
-          git clone --recursive https://github.com/theos/theos.git theos || true
-          cd theos
-          git checkout master || true
-          cd ..
-          mkdir -p theos/sdks
-          git clone https://github.com/xybp888/iOS-SDKs.git temp-sdks || true
-          mv temp-sdks/*.sdk theos/sdks/ || true
-          rm -rf temp-sdks
-
-      - name: Download Theos toolchain (clang/ld64 for Linux)
-        run: |
-          cd theos
-          git clone https://github.com/theos/toolchain.git toolchain || true
-          cd toolchain
-          git checkout master || true
-          cd ..
-          # 强制修复 clang 路径
-          mkdir -p toolchain/linux/iphone/bin
-          # 如果 git clone 成功，链接 clang
-          if [ -f toolchain/linux/iphone/bin/clang ]; then
-            echo "clang found!"
-          else
-            echo "clang not found, trying to fix path"
-          fi
-          ln -sf toolchain/linux/iphone/bin/clang toolchain/iphone/bin/clang || true
-          ls -la toolchain/linux/iphone/bin/ || true  # 打印 clang 是否存在
-
-      - name: Cache Theos & SDKs
-        uses: actions/cache@v4
+      - name: Setup Theos
+        uses: Randomblock1/theos-action@v1
         with:
-          path: |
-            theos
-            .theos
-          key: ${{ runner.os }}-theos-${{ hashFiles('Makefile', 'control', 'Tweak.x') }}
+          theos-dir: theos
+          theos-src: https://github.com/theos/theos
+          theos-sdks: https://github.com/xybp888/iOS-SDKs
+          theos-sdks-branch: master
+          orion: false
 
       - name: Build & Package
         run: |
-          export THEOS=${{ github.workspace }}/theos
-          export THEOS_PACKAGE_SCHEME=rootless
-          export ARCHS="arm64 arm64e"
-          make clean || true
-          make package FINALPACKAGE=1 || true
-          # 打印所有生成的文件
-          echo "Listing all files after build:"
-          find . -type f | grep -E "\.dylib|\.deb" || true
-          ls -la .theos/obj/ || true
-          ls -la packages/ || true
+          make clean
+          make package FINALPACKAGE=1
         env:
+          THEOS_PACKAGE_SCHEME: rootless
           THEOS: ${{ github.workspace }}/theos
+          ARCHS: arm64 arm64e
 
-      - name: Upload artifacts (always, wide search)
+      - name: Upload artifacts (wide search)
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: plugin-build
           path: |
-            **/*.deb
+            packages/*.deb
+            .theos/obj/*.dylib
             **/*.dylib
-            packages/
-            .theos/obj/
+            **/*.deb
           if-no-files-found: warn
